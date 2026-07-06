@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sparrow Search</title>
+</head>
+<body>
+    <h1>Sparrow</h1>
+
+    <form id="search-form">
+        <input type="text" id="query" placeholder="Search..." />
+        <button type="submit">Search</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        const form = document.getElementById('search-form');
+        const queryInput = document.getElementById('query');
+        const resultsDiv = document.getElementById('results');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const q = queryInput.value.trim();
+            if (!q) return;
+
+            resultsDiv.innerHTML = "Searching...";
+
+            try {
+                const res = await fetch("http:172.105.0.41:8080/search?q=" 
+                                        + encodeURIComponent(q) 
+                                        + "&format=json");
+                const data = await res.json();
+
+                // data.results is the main list
+                const results = data.results || [];
+
+                if (!results.length) {
+                    resultsDiv.innerHTML = "<p>No results.</p>";
+                    return;
+                }
+
+                let html = "";
+                for (const r of results) {
+                    html += "<div style='margin-bottom:20px;'>";
+
+                    // title + link
+                    if (r.title && r.url) {
+                        html += "<div><a href='" + r.url + "'>" 
+                             + r.title + "</a></div>";
+                    }
+
+                    // image if exists
+                    if (r.img_src) {
+                        html += "<div><img src='" + r.img_src + "' "
+                             + "style='max-width:200px;'></div>";
+                    }
+
+                    // snippet/content
+                    if (r.content) {
+                        html += "<div><p>" + r.content + "</p></div>";
+                    }
+
+                    html += "</div>";
+                }
+
+                resultsDiv.innerHTML = html;
+
+            } catch (err) {
+                resultsDiv.innerHTML = "<p>Error fetching results.</p>";
+            }
+        });
+    </script>
+</body>
+</html>
