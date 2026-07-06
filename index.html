@@ -2,10 +2,10 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Sparrow Search</title>
+    <title>Sparrow Secure Search</title>
 </head>
 <body>
-    <h1>Sparrow</h1>
+    <h1>Sparrow v0.3</h1>
 
     <form id="search-form">
         <input type="text" id="query" placeholder="Search..." />
@@ -27,7 +27,7 @@
             resultsDiv.innerHTML = "Searching...";
 
             try {
-                const res = await fetch("http://172.105.0.41:8080/search?q=" 
+                const res = await fetch("http://172.105.0.41:8080" 
                                         + encodeURIComponent(q) 
                                         + "&format=json");
                 const data = await res.json();
