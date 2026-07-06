@@ -27,7 +27,7 @@
             resultsDiv.innerHTML = "Searching...";
 
             try {
-                const res = await fetch("http:172.105.0.41:8080/search?q=" 
+                const res = await fetch("http://172.105.0.41:8080/search?q=" 
                                         + encodeURIComponent(q) 
                                         + "&format=json");
                 const data = await res.json();
