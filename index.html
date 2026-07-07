@@ -1,89 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>Sparrow Search</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #050816;
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .wrapper {
-      max-width: 600px;
-      width: 100%;
-      text-align: center;
-    }
-    .logo {
-      font-size: 2.4rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      margin-bottom: 1rem;
-    }
-    .tagline {
-      font-size: 0.95rem;
-      color: #9ca3af;
-      margin-bottom: 2rem;
-    }
-    .search-box {
-      display: flex;
-      gap: 0.5rem;
-      background: #0b1120;
-      border-radius: 999px;
-      padding: 0.4rem 0.6rem;
-      border: 1px solid #1f2937;
-    }
-    .search-box input {
-      flex: 1;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: #e5e7eb;
-      font-size: 0.95rem;
-      padding: 0.6rem 0.8rem;
-    }
-    .search-box button {
-      border: none;
-      outline: none;
-      border-radius: 999px;
-      padding: 0.6rem 1.2rem;
-      background: #2563eb;
-      color: #f9fafb;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .search-box button:hover {
-      background: #1d4ed8;
-    }
-  </style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="logo">SPARROW</div>
-    <div class="tagline">A cleaner window into the web.</div>
 
-    <!-- Direct Mojeek search (same tab) -->
-    <form
-      class="search-box"
-      action="https://www.mojeek.com/search"
-      method="GET"
-      target="_self"
-    >
-      <input
-        type="text"
-        name="q"
-        placeholder="Search with Sparrow..."
-        autocomplete="off"
-        required
-      />
-      <button type="submit">Search</button>
-    </form>
-  </div>
+  <h1>Sparrow Search</h1>
+
+  <form id="searchForm">
+    <input type="text" id="query" placeholder="Search..." required>
+    <button type="submit">Go</button>
+  </form>
+
+  <div id="results"></div>
+
+  <script>
+    document.getElementById("searchForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const q = document.getElementById("query").value;
+
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "";
+
+      data.results.forEach(r => {
+        const item = document.createElement("div");
+        item.innerHTML = `
+          <h3><a href="${r.url}" target="_blank">${r.title}</a></h3>
+          <p>${r.snippet}</p>
+        `;
+        resultsDiv.appendChild(item);
+      });
+    });
+  </script>
+
 </body>
 </html>
