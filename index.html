@@ -1,76 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Sparrow Secure Search</title>
+  <meta charset="UTF-8">
+  <title>Sparrow Search</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #050816;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .wrapper {
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+    .logo {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+    .tagline {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      margin-bottom: 2rem;
+    }
+    .search-box {
+      display: flex;
+      gap: 0.5rem;
+      background: #0b1120;
+      border-radius: 999px;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #1f2937;
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 0.95rem;
+      padding: 0.6rem 0.8rem;
+    }
+    .search-box button {
+      border: none;
+      outline: none;
+      border-radius: 999px;
+      padding: 0.6rem 1.2rem;
+      background: #2563eb;
+      color: #f9fafb;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .search-box button:hover {
+      background: #1d4ed8;
+    }
+  </style>
 </head>
 <body>
-    <h1>Sparrow v0.4</h1>
+  <div class="wrapper">
+    <div class="logo">SPARROW</div>
+    <div class="tagline">A cleaner window into the web.</div>
 
-    <form id="search-form">
-        <input type="text" id="query" placeholder="Search..." />
-        <button type="submit">Search</button>
+    <!-- Direct Mojeek search (same tab) -->
+    <form
+      class="search-box"
+      action="https://www.mojeek.com/search"
+      method="GET"
+      target="_self"
+    >
+      <input
+        type="text"
+        name="q"
+        placeholder="Search with Sparrow..."
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Search</button>
     </form>
-
-    <div id="results"></div>
-
-    <script>
-        const form = document.getElementById('search-form');
-        const queryInput = document.getElementById('query');
-        const resultsDiv = document.getElementById('results');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const q = queryInput.value.trim();
-            if (!q) return;
-
-            resultsDiv.innerHTML = "Searching...";
-
-            try {
-                const res = await fetch("http://172.105.0.41:8080/search?q=" 
-                        + encodeURIComponent(q) 
-                        + "&format=json");
-
-                const data = await res.json();
-
-                // data.results is the main list
-                const results = data.results || [];
-
-                if (!results.length) {
-                    resultsDiv.innerHTML = "<p>No results.</p>";
-                    return;
-                }
-
-                let html = "";
-                for (const r of results) {
-                    html += "<div style='margin-bottom:20px;'>";
-
-                    // title + link
-                    if (r.title && r.url) {
-                        html += "<div><a href='" + r.url + "'>" 
-                             + r.title + "</a></div>";
-                    }
-
-                    // image if exists
-                    if (r.img_src) {
-                        html += "<div><img src='" + r.img_src + "' "
-                             + "style='max-width:200px;'></div>";
-                    }
-
-                    // snippet/content
-                    if (r.content) {
-                        html += "<div><p>" + r.content + "</p></div>";
-                    }
-
-                    html += "</div>";
-                }
-
-                resultsDiv.innerHTML = html;
-
-            } catch (err) {
-                resultsDiv.innerHTML = "<p>Error fetching results.</p>";
-            }
-        });
-    </script>
+  </div>
 </body>
 </html>
