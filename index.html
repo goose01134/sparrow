@@ -21,7 +21,7 @@
 
       const q = document.getElementById("query").value;
 
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`https://shrill-bird-601c.waaizhassan4.workers.dev/?q=${encodeURIComponent(q)}`);
       const data = await res.json();
 
       const resultsDiv = document.getElementById("results");
