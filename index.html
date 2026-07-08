@@ -3,41 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <title>Sparrow Search</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 16px; }
+    #searchForm { display: flex; gap: 8px; margin-bottom: 16px; }
+    #query { flex: 1; padding: 8px; }
+    #tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #ccc; }
+    .tab-btn {
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 15px;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active { border-bottom: 2px solid #333; font-weight: bold; }
+    #webResults div { margin-bottom: 20px; }
+    #imageResults {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    #imageResults img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+  </style>
 </head>
 <body>
-
   <h1>Sparrow Search</h1>
-
   <form id="searchForm">
     <input type="text" id="query" placeholder="Search..." required>
     <button type="submit">Go</button>
   </form>
 
-  <div id="results"></div>
+  <div id="tabs">
+    <button class="tab-btn active" data-tab="web">Web</button>
+    <button class="tab-btn" data-tab="images">Images</button>
+  </div>
+
+  <div id="webPanel" class="tab-panel active">
+    <div id="webResults"></div>
+  </div>
+
+  <div id="imagesPanel" class="tab-panel">
+    <div id="imageResults"></div>
+  </div>
 
   <script>
-    document.getElementById("searchForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
+    const WORKER_URL = "https://shrill-bird-601c.waaizhassan4.workers.dev";
+    let currentTab = "web";
+    let lastQuery = "";
 
-      const q = document.getElementById("query").value;
+    // Tab switching
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        currentTab = btn.dataset.tab;
+        document.getElementById(currentTab + "Panel").classList.add("active");
 
-      const res = await fetch(`https://shrill-bird-601c.waaizhassan4.workers.dev/?q=${encodeURIComponent(q)}`);
-      
-      const data = await res.json();
-
-      const resultsDiv = document.getElementById("results");
-      resultsDiv.innerHTML = "";
-
-      data.results.forEach(r => {
-        const item = document.createElement("div");
-        item.innerHTML = `
-          <h3><a href="${r.url}" target="_blank">${r.title}</a></h3>
-          <p>${r.snippet}</p>
-        `;
-        resultsDiv.appendChild(item);
+        // If switching tabs after already searching, fetch that tab's results
+        if (lastQuery) runSearch(lastQuery, currentTab);
       });
     });
-  </script>
 
+    document.getElementById("searchForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const q = document.getElementById("query").value;
+      lastQuery = q;
+      runSearch(q, currentTab);
+    });
+
+    async function runSearch(q, tab) {
+      if (tab === "web") {
+        await runWebSearch(q);
+      } else if (tab === "images") {
+        await runImageSearch(q);
+      }
+    }
+
+    async function runWebSearch(q) {
+      const resultsDiv = document.getElementById("webResults");
+      resultsDiv.innerHTML = "Loading...";
+      try {
+        const res = await fetch(`${WORKER_URL}/?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        resultsDiv.innerHTML = "";
+        (data.results || []).forEach(r => {
+          const item = document.createElement("div");
+          item.innerHTML = `
+            <h3><a href="${r.url}" target="_blank">${r.title}</a></h3>
+            <p>${r.snippet}</p>
+          `;
+          resultsDiv.appendChild(item);
+        });
+        if (!data.results || data.results.length === 0) {
+          resultsDiv.innerHTML = "<p>No results found.</p>";
+        }
+      } catch (err) {
+        resultsDiv.innerHTML = "<p>Something went wrong.</p>";
+      }
+    }
+
+    async function runImageSearch(q) {
+      const resultsDiv = document.getElementById("imageResults");
+      resultsDiv.innerHTML = "Loading...";
+      try {
+        const res = await fetch(`${WORKER_URL}/?q=${encodeURIComponent(q)}&type=images`);
+        const data = await res.json();
+        resultsDiv.innerHTML = "";
+        (data.results || []).forEach(r => {
+          const a = document.createElement("a");
+          a.href = r.url;
+          a.target = "_blank";
+          a.innerHTML = `<img src="${r.thumbnail || r.url}" alt="${r.title || ''}" loading="lazy">`;
+          resultsDiv.appendChild(a);
+        });
+        if (!data.results || data.results.length === 0) {
+          resultsDiv.innerHTML = "<p>No image results found.</p>";
+        }
+      } catch (err) {
+        resultsDiv.innerHTML = "<p>Something went wrong.</p>";
+      }
+    }
+  </script>
 </body>
 </html>
