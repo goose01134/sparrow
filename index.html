@@ -168,6 +168,12 @@
     let currentTab = "web";
     let lastQuery = "";
 
+    // ---------- PRIVATE REDIRECT ----------
+    function privateLink(url) {
+      return `${WORKER_URL}/redirect?url=${encodeURIComponent(url)}`;
+    }
+
+    // ---------- TABS ----------
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -180,6 +186,7 @@
       });
     });
 
+    // ---------- SEARCH FORM ----------
     document.getElementById("searchForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const q = document.getElementById("query").value;
@@ -195,6 +202,7 @@
       }
     }
 
+    // ---------- WEB SEARCH ----------
     async function runWebSearch(q) {
       const resultsDiv = document.getElementById("webResults");
       resultsDiv.innerHTML = "Loading...";
@@ -202,14 +210,16 @@
         const res = await fetch(`${WORKER_URL}/?q=${encodeURIComponent(q)}`);
         const data = await res.json();
         resultsDiv.innerHTML = "";
+
         (data.results || []).forEach(r => {
           const item = document.createElement("div");
           item.innerHTML = `
-            <h3><a href="${r.url}" target="_blank">${r.title}</a></h3>
+            <h3><a href="${privateLink(r.url)}">${r.title}</a></h3>
             <p>${r.snippet}</p>
           `;
           resultsDiv.appendChild(item);
         });
+
         if (!data.results || data.results.length === 0) {
           resultsDiv.innerHTML = "<p>No results found.</p>";
         }
@@ -218,6 +228,7 @@
       }
     }
 
+    // ---------- IMAGE SEARCH ----------
     async function runImageSearch(q) {
       const resultsDiv = document.getElementById("imageResults");
       resultsDiv.innerHTML = "Loading...";
@@ -225,13 +236,14 @@
         const res = await fetch(`${WORKER_URL}/?q=${encodeURIComponent(q)}&type=images`);
         const data = await res.json();
         resultsDiv.innerHTML = "";
+
         (data.results || []).forEach(r => {
           const a = document.createElement("a");
-          a.href = r.url;
-          a.target = "_blank";
+          a.href = privateLink(r.url);
           a.innerHTML = `<img src="${r.thumbnail || r.url}" alt="${r.title || ''}" loading="lazy">`;
           resultsDiv.appendChild(a);
         });
+
         if (!data.results || data.results.length === 0) {
           resultsDiv.innerHTML = "<p>No image results found.</p>";
         }
