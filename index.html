@@ -5,15 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sparrow Search</title>
 
-  <!-- Elegant serif font -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 
   <style>
-    /* --- GLOBAL --- */
     body {
       font-family: Inter, sans-serif;
-      max-width: 750px;
-      margin: 50px auto;
+      max-width: 900px;
+      margin: 40px auto;
       padding: 0 20px;
       color: #222;
     }
@@ -21,14 +19,11 @@
     h1 {
       font-family: "Playfair Display", serif;
       font-size: 54px;
-      font-weight: 700;
       text-align: center;
-      letter-spacing: 1px;
       margin-bottom: 30px;
-      color: #1a1a1a;
     }
 
-    /* --- SEARCH BAR --- */
+    /* Search bar */
     #searchForm {
       display: flex;
       gap: 12px;
@@ -39,34 +34,21 @@
       flex: 1;
       padding: 12px 16px;
       font-size: 18px;
-      font-family: "Playfair Display", serif;
       border: 1px solid #ccc;
       border-radius: 8px;
-      transition: 0.2s;
-    }
-
-    #query:focus {
-      border-color: #000;
-      outline: none;
     }
 
     button {
       padding: 12px 22px;
       font-size: 18px;
-      font-family: "Playfair Display", serif;
       background: #000;
       color: #fff;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: 0.2s;
     }
 
-    button:hover {
-      background: #333;
-    }
-
-    /* --- TABS --- */
+    /* Search tabs */
     #tabs {
       display: flex;
       gap: 6px;
@@ -81,9 +63,7 @@
       cursor: pointer;
       font-family: "Playfair Display", serif;
       font-size: 17px;
-      letter-spacing: 0.4px;
       border-bottom: 2px solid transparent;
-      transition: 0.2s;
     }
 
     .tab-btn.active {
@@ -91,7 +71,7 @@
       font-weight: 600;
     }
 
-    /* --- RESULTS --- */
+    /* Results */
     #webResults div {
       margin-bottom: 28px;
     }
@@ -100,24 +80,15 @@
       font-family: "Playfair Display", serif;
       font-size: 22px;
       margin-bottom: 6px;
-    }
-
-    #webResults a {
-      color: #000;
-      text-decoration: none;
-    }
-
-    #webResults a:hover {
-      text-decoration: underline;
+      cursor: pointer;
     }
 
     #webResults p {
       font-size: 16px;
-      line-height: 1.5;
       color: #444;
     }
 
-    /* --- IMAGE GRID --- */
+    /* Image grid */
     #imageResults {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -129,16 +100,50 @@
       height: 140px;
       object-fit: cover;
       border-radius: 8px;
-      transition: 0.2s;
+      cursor: pointer;
     }
 
-    #imageResults img:hover {
-      transform: scale(1.03);
-    }
-
-    /* --- PANELS --- */
+    /* Panels */
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
+
+    /* Browser tabs */
+    #browserTabs {
+      margin-top: 40px;
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+    }
+
+    #tabBar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+    }
+
+    .browser-tab {
+      padding: 8px 14px;
+      background: #eee;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .browser-tab.active {
+      background: #000;
+      color: #fff;
+    }
+
+    iframe {
+      width: 100%;
+      height: 80vh;
+      border: none;
+      display: none;
+    }
+
+    iframe.active {
+      display: block;
+    }
   </style>
 </head>
 
@@ -163,17 +168,51 @@
     <div id="imageResults"></div>
   </div>
 
+  <!-- Private Browser Tabs -->
+  <div id="browserTabs">
+    <div id="tabBar"></div>
+    <div id="tabContainer"></div>
+  </div>
+
   <script>
     const WORKER_URL = "https://shrill-bird-601c.waaizhassan4.workers.dev";
     let currentTab = "web";
     let lastQuery = "";
 
-    // ---------- PRIVATE REDIRECT ----------
+    /* PRIVATE LINK (still logs clicks, but iframe prevents history) */
     function privateLink(url) {
       return `${WORKER_URL}/redirect?url=${encodeURIComponent(url)}`;
     }
 
-    // ---------- TABS ----------
+    /* OPEN IN PRIVATE TAB */
+    function openTab(url, title) {
+      const id = "tab-" + Date.now();
+
+      // Create tab button
+      const tabBtn = document.createElement("button");
+      tabBtn.className = "browser-tab";
+      tabBtn.textContent = title;
+      tabBtn.onclick = () => switchTab(id);
+      document.getElementById("tabBar").appendChild(tabBtn);
+
+      // Create iframe
+      const iframe = document.createElement("iframe");
+      iframe.src = url;
+      iframe.id = id;
+      document.getElementById("tabContainer").appendChild(iframe);
+
+      switchTab(id);
+    }
+
+    function switchTab(id) {
+      document.querySelectorAll(".browser-tab").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll("iframe").forEach(f => f.classList.remove("active"));
+
+      document.querySelector(`.browser-tab[onclick*="${id}"]`).classList.add("active");
+      document.getElementById(id).classList.add("active");
+    }
+
+    /* SEARCH TABS */
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -186,7 +225,7 @@
       });
     });
 
-    // ---------- SEARCH FORM ----------
+    /* SEARCH FORM */
     document.getElementById("searchForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const q = document.getElementById("query").value;
@@ -195,17 +234,15 @@
     });
 
     async function runSearch(q, tab) {
-      if (tab === "web") {
-        await runWebSearch(q);
-      } else {
-        await runImageSearch(q);
-      }
+      if (tab === "web") runWebSearch(q);
+      else runImageSearch(q);
     }
 
-    // ---------- WEB SEARCH ----------
+    /* WEB SEARCH */
     async function runWebSearch(q) {
       const resultsDiv = document.getElementById("webResults");
       resultsDiv.innerHTML = "Loading...";
+
       try {
         const res = await fetch(`${WORKER_URL}/?q=${encodeURIComponent(q)}`);
         const data = await res.json();
@@ -214,39 +251,40 @@
         (data.results || []).forEach(r => {
           const item = document.createElement("div");
           item.innerHTML = `
-            <h3><a href="${privateLink(r.url)}">${r.title}</a></h3>
+            <h3 onclick="openTab('${privateLink(r.url)}', '${r.title.replace(/'/g, "")}')">${r.title}</h3>
             <p>${r.snippet}</p>
           `;
           resultsDiv.appendChild(item);
         });
 
-        if (!data.results || data.results.length === 0) {
+        if (!data.results || data.results.length === 0)
           resultsDiv.innerHTML = "<p>No results found.</p>";
-        }
+
       } catch {
         resultsDiv.innerHTML = "<p>Something went wrong.</p>";
       }
     }
 
-    // ---------- IMAGE SEARCH ----------
+    /* IMAGE SEARCH */
     async function runImageSearch(q) {
       const resultsDiv = document.getElementById("imageResults");
       resultsDiv.innerHTML = "Loading...";
+
       try {
         const res = await fetch(`${WORKER_URL}/?q=${encodeURIComponent(q)}&type=images`);
         const data = await res.json();
         resultsDiv.innerHTML = "";
 
         (data.results || []).forEach(r => {
-          const a = document.createElement("a");
-          a.href = privateLink(r.url);
-          a.innerHTML = `<img src="${r.thumbnail || r.url}" alt="${r.title || ''}" loading="lazy">`;
-          resultsDiv.appendChild(a);
+          const img = document.createElement("img");
+          img.src = r.thumbnail || r.url;
+          img.onclick = () => openTab(privateLink(r.url), r.title || "Image");
+          resultsDiv.appendChild(img);
         });
 
-        if (!data.results || data.results.length === 0) {
+        if (!data.results || data.results.length === 0)
           resultsDiv.innerHTML = "<p>No image results found.</p>";
-        }
+
       } catch {
         resultsDiv.innerHTML = "<p>Something went wrong.</p>";
       }
