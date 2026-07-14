@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sparrow Search</title>
 
-  <!-- Elegant serif font -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 
   <style>
-    /* --- GLOBAL --- */
     body {
       font-family: Inter, sans-serif;
       max-width: 750px;
@@ -28,7 +26,6 @@
       color: #1a1a1a;
     }
 
-    /* --- SEARCH BAR --- */
     #searchForm {
       display: flex;
       gap: 12px;
@@ -66,7 +63,6 @@
       background: #333;
     }
 
-    /* --- TABS --- */
     #tabs {
       display: flex;
       gap: 6px;
@@ -91,7 +87,6 @@
       font-weight: 600;
     }
 
-    /* --- RESULTS --- */
     #webResults div {
       margin-bottom: 28px;
     }
@@ -117,7 +112,6 @@
       color: #444;
     }
 
-    /* --- IMAGE GRID --- */
     #imageResults {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -136,7 +130,6 @@
       transform: scale(1.03);
     }
 
-    /* --- PANELS --- */
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
   </style>
@@ -164,92 +157,133 @@
   </div>
 
   <script>
-    const WORKER_URL = "https://shrill-bird-601c.waaizhassan4.workers.dev";
-    let currentTab = "web";
-    let lastQuery = "";
+    var WORKER_URL = "https://shrill-bird-601c.waaizhassan4.workers.dev";
+    var currentTab = "web";
+    var lastQuery = "";
 
-    // ---------- PRIVATE REDIRECT ----------
-    function privateLink(url) {
-      return `${WORKER_URL}/redirect?url=${encodeURIComponent(url)}`;
+    /* ---------- GS4 SAFE FETCH ---------- */
+    function sparrowFetch(url) {
+      if (window.fetch) {
+        return fetch(url);
+      }
+
+      return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+
+        xhr.onload = function() {
+          resolve({
+            json: function() {
+              return Promise.resolve(JSON.parse(xhr.responseText));
+            },
+            text: function() {
+              return Promise.resolve(xhr.responseText);
+            }
+          });
+        };
+
+        xhr.onerror = reject;
+        xhr.send();
+      });
     }
 
-    // ---------- TABS ----------
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-        btn.classList.add("active");
-        currentTab = btn.dataset.tab;
+    /* ---------- PRIVATE REDIRECT ---------- */
+    function privateLink(url) {
+      return WORKER_URL + "/redirect?url=" + encodeURIComponent(url);
+    }
+
+    /* ---------- TABS ---------- */
+    var tabButtons = document.querySelectorAll(".tab-btn");
+    for (var i = 0; i < tabButtons.length; i++) {
+      tabButtons[i].addEventListener("click", function() {
+        for (var j = 0; j < tabButtons.length; j++) {
+          tabButtons[j].classList.remove("active");
+        }
+        var panels = document.querySelectorAll(".tab-panel");
+        for (var k = 0; k < panels.length; k++) {
+          panels[k].classList.remove("active");
+        }
+
+        this.classList.add("active");
+        currentTab = this.getAttribute("data-tab");
         document.getElementById(currentTab + "Panel").classList.add("active");
 
         if (lastQuery) runSearch(lastQuery, currentTab);
       });
-    });
+    }
 
-    // ---------- SEARCH FORM ----------
-    document.getElementById("searchForm").addEventListener("submit", async (e) => {
+    /* ---------- SEARCH FORM ---------- */
+    document.getElementById("searchForm").addEventListener("submit", function(e) {
       e.preventDefault();
-      const q = document.getElementById("query").value;
+      var q = document.getElementById("query").value;
       lastQuery = q;
       runSearch(q, currentTab);
     });
 
-    async function runSearch(q, tab) {
+    function runSearch(q, tab) {
       if (tab === "web") {
-        await runWebSearch(q);
+        runWebSearch(q);
       } else {
-        await runImageSearch(q);
+        runImageSearch(q);
       }
     }
 
-    // ---------- WEB SEARCH ----------
-    async function runWebSearch(q) {
-      const resultsDiv = document.getElementById("webResults");
+    /* ---------- WEB SEARCH ---------- */
+    function runWebSearch(q) {
+      var resultsDiv = document.getElementById("webResults");
       resultsDiv.innerHTML = "Loading...";
-      try {
-        const res = await fetch(`${WORKER_URL}/?q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        resultsDiv.innerHTML = "";
 
-        (data.results || []).forEach(r => {
-          const item = document.createElement("div");
-          item.innerHTML = `
-            <h3><a href="${privateLink(r.url)}">${r.title}</a></h3>
-            <p>${r.snippet}</p>
-          `;
-          resultsDiv.appendChild(item);
+      sparrowFetch(WORKER_URL + "/?q=" + encodeURIComponent(q))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          resultsDiv.innerHTML = "";
+
+          var items = data.results || [];
+          for (var i = 0; i < items.length; i++) {
+            var r = items[i];
+            var item = document.createElement("div");
+            item.innerHTML =
+              "<h3><a href='" + privateLink(r.url) + "'>" + r.title + "</a></h3>" +
+              "<p>" + r.snippet + "</p>";
+            resultsDiv.appendChild(item);
+          }
+
+          if (items.length === 0) {
+            resultsDiv.innerHTML = "<p>No results found.</p>";
+          }
+        })
+        .catch(function() {
+          resultsDiv.innerHTML = "<p>Something went wrong.</p>";
         });
-
-        if (!data.results || data.results.length === 0) {
-          resultsDiv.innerHTML = "<p>No results found.</p>";
-        }
-      } catch {
-        resultsDiv.innerHTML = "<p>Something went wrong.</p>";
-      }
     }
 
-    // ---------- IMAGE SEARCH ----------
-    async function runImageSearch(q) {
-      const resultsDiv = document.getElementById("imageResults");
+    /* ---------- IMAGE SEARCH ---------- */
+    function runImageSearch(q) {
+      var resultsDiv = document.getElementById("imageResults");
       resultsDiv.innerHTML = "Loading...";
-      try {
-        const res = await fetch(`${WORKER_URL}/?q=${encodeURIComponent(q)}&type=images`);
-        const data = await res.json();
-        resultsDiv.innerHTML = "";
 
-        (data.results || []).forEach(r => {
-          const a = document.createElement("a");
-          a.href = privateLink(r.url);
-          a.innerHTML = `<img src="${r.thumbnail || r.url}" alt="${r.title || ''}" loading="lazy">`;
-          resultsDiv.appendChild(a);
+      sparrowFetch(WORKER_URL + "/?q=" + encodeURIComponent(q) + "&type=images")
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          resultsDiv.innerHTML = "";
+
+          var items = data.results || [];
+          for (var i = 0; i < items.length; i++) {
+            var r = items[i];
+            var a = document.createElement("a");
+            a.href = privateLink(r.url);
+            a.innerHTML =
+              "<img src='" + (r.thumbnail || r.url) + "' alt='" + (r.title || "") + "'>";
+            resultsDiv.appendChild(a);
+          }
+
+          if (items.length === 0) {
+            resultsDiv.innerHTML = "<p>No image results found.</p>";
+          }
+        })
+        .catch(function() {
+          resultsDiv.innerHTML = "<p>Something went wrong.</p>";
         });
-
-        if (!data.results || data.results.length === 0) {
-          resultsDiv.innerHTML = "<p>No image results found.</p>";
-        }
-      } catch {
-        resultsDiv.innerHTML = "<p>Something went wrong.</p>";
-      }
     }
   </script>
 </body>
