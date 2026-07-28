@@ -8,28 +8,37 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 
   <style>
+    /* --- GLOBAL --- */
     body {
       font-family: Inter, sans-serif;
-      max-width: 750px;
-      margin: 50px auto;
+      max-width: 900px;
+      margin: 40px auto;
       padding: 0 20px;
       color: #222;
     }
 
-    h1 {
-      font-family: "Playfair Display", serif;
-      font-size: 54px;
-      font-weight: 700;
-      text-align: center;
-      letter-spacing: 1px;
-      margin-bottom: 30px;
-      color: #1a1a1a;
+    /* --- HEADER --- */
+    #header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 25px;
     }
 
+    #logo {
+      font-family: "Playfair Display", serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #000;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+
+    /* --- SEARCH BAR IN HEADER --- */
     #searchForm {
+      flex: 1;
       display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
+      gap: 10px;
     }
 
     #query {
@@ -63,11 +72,13 @@
       background: #333;
     }
 
+    /* --- TABS --- */
     #tabs {
       display: flex;
       gap: 6px;
       margin-bottom: 20px;
       border-bottom: 1px solid #ddd;
+      padding-bottom: 6px;
     }
 
     .tab-btn {
@@ -87,6 +98,7 @@
       font-weight: 600;
     }
 
+    /* --- WEB RESULTS --- */
     #webResults div {
       margin-bottom: 28px;
     }
@@ -112,6 +124,7 @@
       color: #444;
     }
 
+    /* --- IMAGE GRID --- */
     #imageResults {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -130,24 +143,31 @@
       transform: scale(1.03);
     }
 
+    /* --- PANELS --- */
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
   </style>
 </head>
 
 <body>
-  <h1>Sparrow Search</h1>
 
-  <form id="searchForm">
-    <input type="text" id="query" placeholder="Search..." required>
-    <button type="submit">Go</button>
-  </form>
+  <!-- HEADER -->
+  <div id="header">
+    <div id="logo">Sparrow</div>
 
+    <form id="searchForm">
+      <input type="text" id="query" placeholder="Search..." required>
+      <button type="submit">Go</button>
+    </form>
+  </div>
+
+  <!-- TABS -->
   <div id="tabs">
     <button class="tab-btn active" data-tab="web">Web</button>
     <button class="tab-btn" data-tab="images">Images</button>
   </div>
 
+  <!-- PANELS -->
   <div id="webPanel" class="tab-panel active">
     <div id="webResults"></div>
   </div>
@@ -156,43 +176,33 @@
     <div id="imageResults"></div>
   </div>
 
+  <!-- JS (unchanged except layout compatibility) -->
   <script>
     var WORKER_URL = "https://shrill-bird-601c.waaizhassan4.workers.dev";
     var currentTab = "web";
     var lastQuery = "";
 
-    /* ---------- GS4 SAFE FETCH ---------- */
     function sparrowFetch(url) {
-      if (window.fetch) {
-        return fetch(url);
-      }
+      if (window.fetch) return fetch(url);
 
       return new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
-
         xhr.onload = function() {
           resolve({
-            json: function() {
-              return Promise.resolve(JSON.parse(xhr.responseText));
-            },
-            text: function() {
-              return Promise.resolve(xhr.responseText);
-            }
+            json: function() { return Promise.resolve(JSON.parse(xhr.responseText)); },
+            text: function() { return Promise.resolve(xhr.responseText); }
           });
         };
-
         xhr.onerror = reject;
         xhr.send();
       });
     }
 
-    /* ---------- PRIVATE REDIRECT ---------- */
     function privateLink(url) {
       return WORKER_URL + "/redirect?url=" + encodeURIComponent(url);
     }
 
-    /* ---------- TABS ---------- */
     var tabButtons = document.querySelectorAll(".tab-btn");
     for (var i = 0; i < tabButtons.length; i++) {
       tabButtons[i].addEventListener("click", function() {
@@ -212,7 +222,6 @@
       });
     }
 
-    /* ---------- SEARCH FORM ---------- */
     document.getElementById("searchForm").addEventListener("submit", function(e) {
       e.preventDefault();
       var q = document.getElementById("query").value;
@@ -221,14 +230,10 @@
     });
 
     function runSearch(q, tab) {
-      if (tab === "web") {
-        runWebSearch(q);
-      } else {
-        runImageSearch(q);
-      }
+      if (tab === "web") runWebSearch(q);
+      else runImageSearch(q);
     }
 
-    /* ---------- WEB SEARCH ---------- */
     function runWebSearch(q) {
       var resultsDiv = document.getElementById("webResults");
       resultsDiv.innerHTML = "Loading...";
@@ -237,8 +242,8 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
           resultsDiv.innerHTML = "";
-
           var items = data.results || [];
+
           for (var i = 0; i < items.length; i++) {
             var r = items[i];
             var item = document.createElement("div");
@@ -257,7 +262,6 @@
         });
     }
 
-    /* ---------- IMAGE SEARCH ---------- */
     function runImageSearch(q) {
       var resultsDiv = document.getElementById("imageResults");
       resultsDiv.innerHTML = "Loading...";
@@ -266,8 +270,8 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
           resultsDiv.innerHTML = "";
-
           var items = data.results || [];
+
           for (var i = 0; i < items.length; i++) {
             var r = items[i];
             var a = document.createElement("a");
