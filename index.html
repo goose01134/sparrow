@@ -8,20 +8,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 
   <style>
-    /* --- GLOBAL --- */
+    /* GLOBAL */
     body {
       font-family: Inter, sans-serif;
-      max-width: 900px;
+      max-width: 1000px;
       margin: 40px auto;
       padding: 0 20px;
       color: #222;
     }
 
-    /* --- HEADER --- */
+    /* HEADER */
     #header {
       display: flex;
       align-items: center;
-      gap: 20px;
+      justify-content: flex-start;
+      gap: 24px;
       margin-bottom: 25px;
     }
 
@@ -32,9 +33,9 @@
       color: #000;
       letter-spacing: 0.5px;
       user-select: none;
+      flex-shrink: 0;
     }
 
-    /* --- SEARCH BAR IN HEADER --- */
     #searchForm {
       flex: 1;
       display: flex;
@@ -72,7 +73,7 @@
       background: #333;
     }
 
-    /* --- TABS --- */
+    /* TABS */
     #tabs {
       display: flex;
       gap: 6px;
@@ -82,13 +83,13 @@
     }
 
     .tab-btn {
-      padding: 10px 18px;
+      padding: 8px 16px;
       background: none;
       border: none;
       cursor: pointer;
       font-family: "Playfair Display", serif;
-      font-size: 17px;
-      letter-spacing: 0.4px;
+      font-size: 16px;
+      letter-spacing: 0.3px;
       border-bottom: 2px solid transparent;
       transition: 0.2s;
     }
@@ -98,9 +99,9 @@
       font-weight: 600;
     }
 
-    /* --- WEB RESULTS --- */
+    /* RESULTS */
     #webResults div {
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     #webResults h3 {
@@ -124,7 +125,7 @@
       color: #444;
     }
 
-    /* --- IMAGE GRID --- */
+    /* IMAGE GRID */
     #imageResults {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -143,15 +144,13 @@
       transform: scale(1.03);
     }
 
-    /* --- PANELS --- */
+    /* PANELS */
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
   </style>
 </head>
 
 <body>
-
-  <!-- HEADER -->
   <div id="header">
     <div id="logo">Sparrow</div>
 
@@ -161,13 +160,11 @@
     </form>
   </div>
 
-  <!-- TABS -->
   <div id="tabs">
     <button class="tab-btn active" data-tab="web">Web</button>
     <button class="tab-btn" data-tab="images">Images</button>
   </div>
 
-  <!-- PANELS -->
   <div id="webPanel" class="tab-panel active">
     <div id="webResults"></div>
   </div>
@@ -175,120 +172,5 @@
   <div id="imagesPanel" class="tab-panel">
     <div id="imageResults"></div>
   </div>
-
-  <!-- JS (unchanged except layout compatibility) -->
-  <script>
-    var WORKER_URL = "https://shrill-bird-601c.waaizhassan4.workers.dev";
-    var currentTab = "web";
-    var lastQuery = "";
-
-    function sparrowFetch(url) {
-      if (window.fetch) return fetch(url);
-
-      return new Promise(function(resolve, reject) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
-        xhr.onload = function() {
-          resolve({
-            json: function() { return Promise.resolve(JSON.parse(xhr.responseText)); },
-            text: function() { return Promise.resolve(xhr.responseText); }
-          });
-        };
-        xhr.onerror = reject;
-        xhr.send();
-      });
-    }
-
-    function privateLink(url) {
-      return WORKER_URL + "/redirect?url=" + encodeURIComponent(url);
-    }
-
-    var tabButtons = document.querySelectorAll(".tab-btn");
-    for (var i = 0; i < tabButtons.length; i++) {
-      tabButtons[i].addEventListener("click", function() {
-        for (var j = 0; j < tabButtons.length; j++) {
-          tabButtons[j].classList.remove("active");
-        }
-        var panels = document.querySelectorAll(".tab-panel");
-        for (var k = 0; k < panels.length; k++) {
-          panels[k].classList.remove("active");
-        }
-
-        this.classList.add("active");
-        currentTab = this.getAttribute("data-tab");
-        document.getElementById(currentTab + "Panel").classList.add("active");
-
-        if (lastQuery) runSearch(lastQuery, currentTab);
-      });
-    }
-
-    document.getElementById("searchForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      var q = document.getElementById("query").value;
-      lastQuery = q;
-      runSearch(q, currentTab);
-    });
-
-    function runSearch(q, tab) {
-      if (tab === "web") runWebSearch(q);
-      else runImageSearch(q);
-    }
-
-    function runWebSearch(q) {
-      var resultsDiv = document.getElementById("webResults");
-      resultsDiv.innerHTML = "Loading...";
-
-      sparrowFetch(WORKER_URL + "/?q=" + encodeURIComponent(q))
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          resultsDiv.innerHTML = "";
-          var items = data.results || [];
-
-          for (var i = 0; i < items.length; i++) {
-            var r = items[i];
-            var item = document.createElement("div");
-            item.innerHTML =
-              "<h3><a href='" + privateLink(r.url) + "'>" + r.title + "</a></h3>" +
-              "<p>" + r.snippet + "</p>";
-            resultsDiv.appendChild(item);
-          }
-
-          if (items.length === 0) {
-            resultsDiv.innerHTML = "<p>No results found.</p>";
-          }
-        })
-        .catch(function() {
-          resultsDiv.innerHTML = "<p>Something went wrong.</p>";
-        });
-    }
-
-    function runImageSearch(q) {
-      var resultsDiv = document.getElementById("imageResults");
-      resultsDiv.innerHTML = "Loading...";
-
-      sparrowFetch(WORKER_URL + "/?q=" + encodeURIComponent(q) + "&type=images")
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          resultsDiv.innerHTML = "";
-          var items = data.results || [];
-
-          for (var i = 0; i < items.length; i++) {
-            var r = items[i];
-            var a = document.createElement("a");
-            a.href = privateLink(r.url);
-            a.innerHTML =
-              "<img src='" + (r.thumbnail || r.url) + "' alt='" + (r.title || "") + "'>";
-            resultsDiv.appendChild(a);
-          }
-
-          if (items.length === 0) {
-            resultsDiv.innerHTML = "<p>No image results found.</p>";
-          }
-        })
-        .catch(function() {
-          resultsDiv.innerHTML = "<p>Something went wrong.</p>";
-        });
-    }
-  </script>
 </body>
 </html>
