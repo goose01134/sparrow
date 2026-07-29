@@ -4,31 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sparrow Search</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-    }
+    /* GLOBAL */
     body {
       font-family: Inter, sans-serif;
-      color: #202124;
-      background: #fff;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #222;
     }
-
-    /* TOP BAR — spans the full width of the page, like Google's results header */
-    #topbar {
+    /* HEADER */
+    #header {
       display: flex;
       align-items: center;
+      justify-content: flex-start;
       gap: 24px;
-      width: 100%;
-      padding: 14px 24px;
-      border-bottom: 1px solid #ebebeb;
+      margin-bottom: 25px;
     }
     #logo {
       font-family: "Playfair Display", serif;
-      font-size: 26px;
+      font-size: 36px;
       font-weight: 700;
       color: #000;
       letter-spacing: 0.5px;
@@ -38,260 +34,117 @@
     #searchForm {
       flex: 1;
       display: flex;
-      align-items: center;
-      gap: 0;
-      padding: 3px 3px 3px 20px;
-      border: 1px solid #d3d3d3;
-      border-radius: 24px;
-      background: #f5f5f5;
-      transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-    }
-    #searchForm:hover {
-      box-shadow: 0 1px 6px rgba(32,33,36,0.15);
-      background: #fff;
-    }
-    #searchForm:focus-within {
-      border-color: #00897b;
-      background: #fff;
-      box-shadow: 0 1px 6px rgba(0,137,123,0.2);
+      gap: 10px;
     }
     #query {
       flex: 1;
-      border: none;
+      padding: 12px 16px;
+      font-size: 18px;
+      font-family: "Playfair Display", serif;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+    #query:focus {
+      border-color: #000;
       outline: none;
-      font-size: 16px;
-      font-family: Inter, sans-serif;
-      background: transparent;
     }
-    #searchForm button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      background: linear-gradient(135deg, #00897b, #00695c);
+    button {
+      padding: 12px 22px;
+      font-size: 18px;
+      font-family: "Playfair Display", serif;
+      background: #000;
+      color: #fff;
       border: none;
-      border-radius: 20px;
+      border-radius: 8px;
       cursor: pointer;
-      flex-shrink: 0;
-      transition: filter 0.15s;
+      transition: 0.2s;
     }
-    #searchForm button:hover {
-      filter: brightness(1.08);
+    button:hover {
+      background: #333;
     }
-    #searchForm button svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    /* PAGE BODY — everything below the top bar, left-aligned under it */
-    #page {
-      padding: 0 24px;
-    }
+    /* TABS */
     #tabs {
       display: flex;
-      gap: 4px;
-      margin-top: 4px;
-      border-bottom: 1px solid #ebebeb;
+      gap: 6px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 6px;
     }
     .tab-btn {
-      padding: 10px 16px;
+      padding: 8px 16px;
       background: none;
       border: none;
       cursor: pointer;
-      font-family: Inter, sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      color: #5f6368;
-      letter-spacing: 0.2px;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -1px;
-      transition: 0.15s;
-    }
-    .tab-btn:hover {
-      color: #202124;
+      font-family: "Playfair Display", serif;
+      font-size: 16px;
+      letter-spacing: 0.3px;
+      border-bottom: 2px solid transparent;
+      transition: 0.2s;
     }
     .tab-btn.active {
-      border-bottom: 3px solid #00897b;
-      color: #00897b;
+      border-bottom: 2px solid #000;
       font-weight: 600;
     }
-
-    #results {
-      padding-top: 20px;
-    }
-
-    #resultCount {
-      font-size: 13px;
-      color: #70757a;
-      margin: 16px 0 20px 0;
-    }
-
     /* RESULTS */
     #webResults div {
-      margin-bottom: 26px;
-      max-width: 620px;
-    }
-    #webResults .url {
-      font-size: 13px;
-      color: #006621;
-      margin-bottom: 2px;
-    }
-    #statusMsg {
-      font-size: 14px;
-      color: #70757a;
-      padding: 20px 0;
+      margin-bottom: 24px;
     }
     #webResults h3 {
-      font-family: Inter, sans-serif;
-      font-weight: 500;
-      font-size: 19px;
-      margin: 0 0 4px 0;
+      font-family: "Playfair Display", serif;
+      font-size: 22px;
+      margin-bottom: 6px;
     }
     #webResults a {
-      color: #1a0dab;
+      color: #000;
       text-decoration: none;
     }
     #webResults a:hover {
       text-decoration: underline;
     }
     #webResults p {
-      font-size: 14px;
-      line-height: 1.55;
-      color: #4d5156;
-      margin: 0;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #444;
     }
-
     /* IMAGE GRID */
     #imageResults {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
+      gap: 14px;
     }
     #imageResults img {
       width: 100%;
       height: 140px;
       object-fit: cover;
       border-radius: 8px;
-      border: 1px solid #ebebeb;
-      transition: 0.15s;
+      transition: 0.2s;
     }
     #imageResults img:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      transform: scale(1.02);
+      transform: scale(1.03);
     }
-
+    /* PANELS */
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
   </style>
 </head>
 <body>
-  <div id="topbar">
+  <div id="header">
     <div id="logo">Sparrow</div>
     <form id="searchForm">
       <input type="text" id="query" placeholder="Search..." required>
-      <button type="submit" aria-label="Search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="7"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </button>
+      <button type="submit">Go</button>
     </form>
   </div>
-
-  <div id="page">
-    <div id="tabs">
-      <button class="tab-btn active" data-tab="web">Web</button>
-      <button class="tab-btn" data-tab="images">Images</button>
-    </div>
-
-    <div id="results">
-      <div id="webPanel" class="tab-panel active">
-        <div id="webResults"></div>
-      </div>
-      <div id="imagesPanel" class="tab-panel">
-        <div id="imageResults"></div>
-      </div>
-    </div>
+  <div id="tabs">
+    <button class="tab-btn active" data-tab="web">Web</button>
+    <button class="tab-btn" data-tab="images">Images</button>
   </div>
-
-  <script>
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const panels = {
-      web: document.getElementById('webPanel'),
-      images: document.getElementById('imagesPanel')
-    };
-    const webResults = document.getElementById('webResults');
-    const imageResults = document.getElementById('imageResults');
-
-    tabButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        Object.values(panels).forEach(p => p.classList.remove('active'));
-        panels[btn.dataset.tab].classList.add('active');
-      });
-    });
-
-    // ---- POINT THIS AT YOUR OWN SEARCH BACKEND ----
-    // Change this to your real API route. It should return JSON shaped like:
-    // {
-    //   "web": [ { "title": "...", "url": "...", "snippet": "..." }, ... ],
-    //   "images": [ { "src": "...", "alt": "..." }, ... ]
-    // }
-    const SEARCH_ENDPOINT = '/api/search';
-
-    function renderWeb(items) {
-      webResults.innerHTML = '';
-      if (!items || items.length === 0) {
-        webResults.innerHTML = '<div>No results.</div>';
-        return;
-      }
-      items.forEach(item => {
-        const div = document.createElement('div');
-        div.innerHTML = `
-          <div class="url">${item.url}</div>
-          <h3><a href="${item.url}" target="_blank" rel="noopener">${item.title}</a></h3>
-          <p>${item.snippet || ''}</p>
-        `;
-        webResults.appendChild(div);
-      });
-    }
-
-    function renderImages(items) {
-      imageResults.innerHTML = '';
-      if (!items || items.length === 0) {
-        imageResults.innerHTML = '<div>No results.</div>';
-        return;
-      }
-      items.forEach(item => {
-        const img = document.createElement('img');
-        img.src = item.src;
-        img.alt = item.alt || '';
-        imageResults.appendChild(img);
-      });
-    }
-
-    async function runSearch(q) {
-      webResults.innerHTML = '<div id="statusMsg">Searching…</div>';
-      imageResults.innerHTML = '';
-      try {
-        const res = await fetch(`${SEARCH_ENDPOINT}?q=${encodeURIComponent(q)}`);
-        if (!res.ok) throw new Error(`Search request failed (${res.status})`);
-        const data = await res.json();
-        renderWeb(data.web);
-        renderImages(data.images);
-      } catch (err) {
-        webResults.innerHTML = `<div id="statusMsg">Couldn't reach the search backend: ${err.message}. Point SEARCH_ENDPOINT in the script at your API.</div>`;
-      }
-    }
-
-    document.getElementById('searchForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const q = document.getElementById('query').value.trim();
-      if (q) runSearch(q);
-    });
-  </script>
+  <div id="webPanel" class="tab-panel active">
+    <div id="webResults"></div>
+  </div>
+  <div id="imagesPanel" class="tab-panel">
+    <div id="imageResults"></div>
+  </div>
 </body>
 </html>
