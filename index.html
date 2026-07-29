@@ -4,27 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sparrow Search</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    /* GLOBAL */
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: Inter, sans-serif;
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 0 20px;
-      color: #222;
+      color: #202124;
+      background: #fff;
     }
-    /* HEADER */
-    #header {
+
+    /* TOP BAR — spans the full width of the page, like Google's results header */
+    #topbar {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
       gap: 24px;
-      margin-bottom: 25px;
+      width: 100%;
+      padding: 14px 24px;
+      border-bottom: 1px solid #ebebeb;
     }
     #logo {
       font-family: "Playfair Display", serif;
-      font-size: 36px;
+      font-size: 26px;
       font-weight: 700;
       color: #000;
       letter-spacing: 0.5px;
@@ -34,117 +38,296 @@
     #searchForm {
       flex: 1;
       display: flex;
-      gap: 10px;
+      align-items: center;
+      gap: 0;
+      padding: 3px 3px 3px 20px;
+      border: 1px solid #d3d3d3;
+      border-radius: 24px;
+      background: #f5f5f5;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    #searchForm:hover {
+      box-shadow: 0 1px 6px rgba(32,33,36,0.15);
+      background: #fff;
+    }
+    #searchForm:focus-within {
+      border-color: #00897b;
+      background: #fff;
+      box-shadow: 0 1px 6px rgba(0,137,123,0.2);
     }
     #query {
       flex: 1;
-      padding: 12px 16px;
-      font-size: 18px;
-      font-family: "Playfair Display", serif;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      transition: 0.2s;
-    }
-    #query:focus {
-      border-color: #000;
-      outline: none;
-    }
-    button {
-      padding: 12px 22px;
-      font-size: 18px;
-      font-family: "Playfair Display", serif;
-      background: #000;
-      color: #fff;
       border: none;
-      border-radius: 8px;
+      outline: none;
+      font-size: 16px;
+      font-family: Inter, sans-serif;
+      background: transparent;
+    }
+    #searchForm button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      background: linear-gradient(135deg, #00897b, #00695c);
+      border: none;
+      border-radius: 20px;
       cursor: pointer;
-      transition: 0.2s;
+      flex-shrink: 0;
+      transition: filter 0.15s;
     }
-    button:hover {
-      background: #333;
+    #searchForm button:hover {
+      filter: brightness(1.08);
     }
-    /* TABS */
+    #searchForm button svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* PAGE BODY — everything below the top bar, left-aligned under it */
+    #page {
+      padding: 0 24px;
+    }
     #tabs {
       display: flex;
-      gap: 6px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 6px;
+      gap: 4px;
+      margin-top: 4px;
+      border-bottom: 1px solid #ebebeb;
     }
     .tab-btn {
-      padding: 8px 16px;
+      padding: 10px 16px;
       background: none;
       border: none;
       cursor: pointer;
-      font-family: "Playfair Display", serif;
-      font-size: 16px;
-      letter-spacing: 0.3px;
-      border-bottom: 2px solid transparent;
-      transition: 0.2s;
+      font-family: Inter, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #5f6368;
+      letter-spacing: 0.2px;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -1px;
+      transition: 0.15s;
+    }
+    .tab-btn:hover {
+      color: #202124;
     }
     .tab-btn.active {
-      border-bottom: 2px solid #000;
+      border-bottom: 3px solid #00897b;
+      color: #00897b;
       font-weight: 600;
     }
+
+    #results {
+      padding-top: 20px;
+    }
+
+    #resultCount {
+      font-size: 13px;
+      color: #70757a;
+      margin: 16px 0 20px 0;
+    }
+
     /* RESULTS */
     #webResults div {
-      margin-bottom: 24px;
+      margin-bottom: 26px;
+      max-width: 620px;
+    }
+    #webResults .url {
+      font-size: 13px;
+      color: #006621;
+      margin-bottom: 2px;
+    }
+    #statusMsg {
+      font-size: 14px;
+      color: #70757a;
+      padding: 20px 0;
     }
     #webResults h3 {
-      font-family: "Playfair Display", serif;
-      font-size: 22px;
-      margin-bottom: 6px;
+      font-family: Inter, sans-serif;
+      font-weight: 500;
+      font-size: 19px;
+      margin: 0 0 4px 0;
     }
     #webResults a {
-      color: #000;
+      color: #1a0dab;
       text-decoration: none;
     }
     #webResults a:hover {
       text-decoration: underline;
     }
     #webResults p {
-      font-size: 16px;
-      line-height: 1.5;
-      color: #444;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #4d5156;
+      margin: 0;
     }
+
     /* IMAGE GRID */
     #imageResults {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 14px;
+      gap: 12px;
     }
     #imageResults img {
       width: 100%;
       height: 140px;
       object-fit: cover;
       border-radius: 8px;
-      transition: 0.2s;
+      border: 1px solid #ebebeb;
+      transition: 0.15s;
     }
     #imageResults img:hover {
-      transform: scale(1.03);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transform: scale(1.02);
     }
-    /* PANELS */
+
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
   </style>
 </head>
 <body>
-  <div id="header">
+  <div id="topbar">
     <div id="logo">Sparrow</div>
     <form id="searchForm">
       <input type="text" id="query" placeholder="Search..." required>
-      <button type="submit">Go</button>
+      <button type="submit" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
     </form>
   </div>
-  <div id="tabs">
-    <button class="tab-btn active" data-tab="web">Web</button>
-    <button class="tab-btn" data-tab="images">Images</button>
+
+  <div id="page">
+    <div id="tabs">
+      <button class="tab-btn active" data-tab="web">Web</button>
+      <button class="tab-btn" data-tab="images">Images</button>
+    </div>
+
+    <div id="results">
+      <div id="webPanel" class="tab-panel active">
+        <div id="webResults"></div>
+      </div>
+      <div id="imagesPanel" class="tab-panel">
+        <div id="imageResults"></div>
+      </div>
+    </div>
   </div>
-  <div id="webPanel" class="tab-panel active">
-    <div id="webResults"></div>
-  </div>
-  <div id="imagesPanel" class="tab-panel">
-    <div id="imageResults"></div>
-  </div>
+
+  <script>
+    var WORKER_URL = "https://shrill-bird-601c.waaizhassan4.workers.dev";
+    var currentTab = "web";
+    var lastQuery = "";
+
+    function sparrowFetch(url) {
+      if (window.fetch) return fetch(url);
+
+      return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.onload = function() {
+          resolve({
+            json: function() { return Promise.resolve(JSON.parse(xhr.responseText)); },
+            text: function() { return Promise.resolve(xhr.responseText); }
+          });
+        };
+        xhr.onerror = reject;
+        xhr.send();
+      });
+    }
+
+    function privateLink(url) {
+      return WORKER_URL + "/redirect?url=" + encodeURIComponent(url);
+    }
+
+    var tabButtons = document.querySelectorAll(".tab-btn");
+    for (var i = 0; i < tabButtons.length; i++) {
+      tabButtons[i].addEventListener("click", function() {
+        for (var j = 0; j < tabButtons.length; j++) {
+          tabButtons[j].classList.remove("active");
+        }
+        var panels = document.querySelectorAll(".tab-panel");
+        for (var k = 0; k < panels.length; k++) {
+          panels[k].classList.remove("active");
+        }
+
+        this.classList.add("active");
+        currentTab = this.getAttribute("data-tab");
+        document.getElementById(currentTab + "Panel").classList.add("active");
+
+        if (lastQuery) runSearch(lastQuery, currentTab);
+      });
+    }
+
+    document.getElementById("searchForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      var q = document.getElementById("query").value;
+      lastQuery = q;
+      runSearch(q, currentTab);
+    });
+
+    function runSearch(q, tab) {
+      if (tab === "web") runWebSearch(q);
+      else runImageSearch(q);
+    }
+
+    function runWebSearch(q) {
+      var resultsDiv = document.getElementById("webResults");
+      resultsDiv.innerHTML = "Loading...";
+
+      sparrowFetch(WORKER_URL + "/?q=" + encodeURIComponent(q))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          resultsDiv.innerHTML = "";
+          var items = data.results || [];
+
+          for (var i = 0; i < items.length; i++) {
+            var r = items[i];
+            var item = document.createElement("div");
+            item.innerHTML =
+              "<h3><a href='" + privateLink(r.url) + "'>" + r.title + "</a></h3>" +
+              "<p>" + r.snippet + "</p>";
+            resultsDiv.appendChild(item);
+          }
+
+          if (items.length === 0) {
+            resultsDiv.innerHTML = "<p>No results found.</p>";
+          }
+        })
+        .catch(function() {
+          resultsDiv.innerHTML = "<p>Something went wrong.</p>";
+        });
+    }
+
+    function runImageSearch(q) {
+      var resultsDiv = document.getElementById("imageResults");
+      resultsDiv.innerHTML = "Loading...";
+
+      sparrowFetch(WORKER_URL + "/?q=" + encodeURIComponent(q) + "&type=images")
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          resultsDiv.innerHTML = "";
+          var items = data.results || [];
+
+          for (var i = 0; i < items.length; i++) {
+            var r = items[i];
+            var a = document.createElement("a");
+            a.href = privateLink(r.url);
+            a.innerHTML =
+              "<img src='" + (r.thumbnail || r.url) + "' alt='" + (r.title || "") + "'>";
+            resultsDiv.appendChild(a);
+          }
+
+          if (items.length === 0) {
+            resultsDiv.innerHTML = "<p>No image results found.</p>";
+          }
+        })
+        .catch(function() {
+          resultsDiv.innerHTML = "<p>Something went wrong.</p>";
+        });
+    }
+  </script>
 </body>
 </html>
